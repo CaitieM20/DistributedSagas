@@ -5,12 +5,16 @@ sudo: false
 go:
   - 1.6
 
-before_install:
+default:  
+  go build ./...
 
 before_script:
+  go fmt ./...
+  go vet $(go list ./...)
 
-script:
-  - sh testCoverage.sh
+test:
+  go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v
+  sh testCoverage.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
