@@ -1,1 +1,1 @@
-# Distributed Sagas
+# Sagas
