@@ -6,15 +6,15 @@ go:
   - 1.6
 
 default:  
-  go build ./...
+  - go build $$(go list ./... | grep -v /vendor/)
 
 before_script:
-  go fmt ./...
-  go vet $(go list ./...)
+  - go fmt ./...
+  - go vet $(go list ./...)
 
 test:
-  go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v
-  sh testCoverage.sh
+  - go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /cmd/)
+  - sh testCoverage.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
