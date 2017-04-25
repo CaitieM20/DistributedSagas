@@ -12,8 +12,7 @@ before_script:
   - go fmt ./...
   - go vet $(go list ./...)
 
-test:
-  - go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /cmd/)
+script:
   - sh testCoverage.sh
 
 after_success:
