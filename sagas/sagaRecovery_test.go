@@ -129,51 +129,51 @@ func TestRecoverState_SuccessfulForwardRecovery(t *testing.T) {
 		t.Error("Expected state to reflect supplied messages")
 	}
 
-	if state.SagaId() != sagaId {
+	if state.sagaId != sagaId {
 		t.Error("Expected SagaState to have same SagaId")
 	}
 
-	if !bytes.Equal(state.Job(), []byte{4, 5, 6}) {
+	if !bytes.Equal(state.job, []byte{4, 5, 6}) {
 		t.Error("Expected SagaState Job to match StartMessage data")
 	}
 
-	if !state.IsTaskStarted(taskId) {
+	if !state.isTaskStarted(taskId) {
 		t.Error("Expected SagaState to have task started")
 	}
 
-	if !bytes.Equal(state.GetStartTaskData(taskId), []byte{1, 2, 3}) {
+	if !bytes.Equal(state.getStartTaskData(taskId), []byte{1, 2, 3}) {
 		t.Error("Expected SagaState to have data associatd with starttask")
 	}
 
-	if state.IsTaskCompleted(taskId) {
+	if state.isTaskCompleted(taskId) {
 		t.Error("Expected SagaState to have task not completed")
 	}
 
-	if state.GetEndTaskData(taskId) != nil {
+	if state.getEndTaskData(taskId) != nil {
 		t.Error("Expected no data associated with end task")
 	}
 
-	if state.IsCompTaskStarted(taskId) {
+	if state.isCompTaskStarted(taskId) {
 		t.Error("Expected SagaState to have comptask not started")
 	}
 
-	if state.GetStartCompTaskData(taskId) != nil {
+	if state.getStartCompTaskData(taskId) != nil {
 		t.Error("Expected no data associated with start comp task")
 	}
 
-	if state.IsCompTaskCompleted(taskId) {
+	if state.isCompTaskCompleted(taskId) {
 		t.Error("Expected SagaState to have comptask not completed")
 	}
 
-	if state.GetEndCompTaskData(taskId) != nil {
+	if state.getEndCompTaskData(taskId) != nil {
 		t.Error("Expected no data associated with end comp task")
 	}
 
-	if state.IsSagaCompleted() {
+	if state.isSagaCompleted() {
 		t.Error("Expected SagaState to not be completed")
 	}
 
-	if state.IsSagaAborted() {
+	if state.isSagaAborted() {
 		t.Error("Expected SagaState to not be aborted")
 	}
 }
@@ -205,7 +205,7 @@ func TestRecoverState_SuccessfulRollbackRecovery(t *testing.T) {
 		t.Error("Expected state to reflect supplied messages")
 	}
 
-	if !state.IsSagaAborted() {
+	if !state.isSagaAborted() {
 		t.Error("Expected Saga to be Aborted, not in Safe State")
 	}
 }

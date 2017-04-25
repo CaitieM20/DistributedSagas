@@ -68,14 +68,14 @@ func genSagaState(genParams *gopter.GenParameters) *SagaState {
 	// check if saga is in completed state then coin flip to decide if we actually log
 	// the end complete message
 	isCompleted := true
-	for _, id := range state.GetTaskIds() {
-		if state.IsSagaAborted() {
-			if !(state.IsTaskStarted(id) && state.IsCompTaskStarted(id) && state.IsCompTaskCompleted(id)) {
+	for _, id := range state.getTaskIds() {
+		if state.isSagaAborted() {
+			if !(state.isTaskStarted(id) && state.isCompTaskStarted(id) && state.isCompTaskCompleted(id)) {
 				isCompleted = false
 				break
 			}
 		} else {
-			if !(state.IsTaskStarted(id) && state.IsTaskCompleted(id)) {
+			if !(state.isTaskStarted(id) && state.isTaskCompleted(id)) {
 				isCompleted = false
 				break
 			}
@@ -124,7 +124,7 @@ func GenSagaStateAndTaskId() gopter.Gen {
 
 		id := genId(genParams)
 		if genParams.NextBool() {
-			ids := state.GetTaskIds()
+			ids := state.getTaskIds()
 			switch len(ids) {
 			case 0:
 				//do nothing just use randomly generated id

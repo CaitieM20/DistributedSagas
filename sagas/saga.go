@@ -4,9 +4,8 @@ import (
 	"sync"
 )
 
-// Concurrent Object Representing a Saga
-// Methods update the state of the saga or
-// Provide access to the Current State
+// Concurrent Object Representing a Saga, to allow for the concurrent execution of tasks
+// Methods update the state of the saga.  
 type Saga struct {
 	id       string
 	log      SagaLog
@@ -56,18 +55,101 @@ func rehydrateSaga(sagaId string, state *SagaState, log SagaLog) *Saga {
 		mutex:    sync.RWMutex{},
 	}
 
-	if !state.IsSagaCompleted() {
+	if !state.isSagaCompleted() {
 		go s.updateSagaStateLoop()
 	}
 
 	return s
 }
 
-// Returns the Current Saga State
-func (s *Saga) GetState() *SagaState {
+// Getter Methods for Saga State to ensure
+// concurrent access is safe.  
+func (s *Saga) SagaId() string {
+	return s.id
+}
+
+func (s *Saga) Job() []byte {
 	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	return s.state
+	r := s.state.job
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) GetTaskIds() []string {
+	s.mutex.RLock()
+	r := s.state.getTaskIds()
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) IsTaskStarted(taskId string) bool {
+	s.mutex.RLock()
+	r := s.state.isTaskStarted(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) GetStartTaskData(taskId string) []byte {
+	s.mutex.RLock()
+	r := s.state.getStartTaskData(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) IsTaskCompleted(taskId string) bool {
+	s.mutex.RLock()
+	r := s.state.isTaskCompleted(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) GetEndTaskData(taskId string) []byte {
+	s.mutex.RLock()
+	r := s.state.getEndTaskData(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga)  IsCompTaskStarted(taskId string) bool {
+	s.mutex.RLock()
+	r := s.state.isCompTaskStarted(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) GetStartCompTaskData(taskId string) []byte {
+	s.mutex.RLock()
+	r := s.state.getStartCompTaskData(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) IsCompTaskCompleted(taskId string) bool {
+	s.mutex.RLock()
+	r := s.state.isCompTaskCompleted(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) GetEndCompTaskData(taskId string) []byte {
+	s.mutex.RLock()
+	r := s.state.getEndCompTaskData(taskId)
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) IsSagaAborted() bool {
+	s.mutex.RLock()
+	r := s.state.isSagaAborted()
+	s.mutex.RUnlock()
+	return r
+}
+
+func (s *Saga) IsSagaCompleted() bool {
+	s.mutex.RLock()
+	r := s.state.isSagaCompleted()
+	s.mutex.RUnlock()
+	return r
 }
 
 //
@@ -145,7 +227,7 @@ func (s *Saga) EndCompensatingTask(taskId string, results []byte) error {
 }
 
 // adds a message for updateSagaStateLoop to execute to the channel for the
-// specified saga.  blocks until the message has been applied
+// specified saga.  Returns after the message has been applied
 func (s *Saga) updateSagaState(msg SagaMessage) error {
 	resultCh := make(chan error, 0)
 	s.updateCh <- sagaUpdate{
@@ -177,14 +259,10 @@ func (s *Saga) updateSagaStateLoop() {
 func (s *Saga) itr(update sagaUpdate) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	currState := s.state
-	newState, err := logMessage(currState, update.msg, s.log)
+	err := logMessage(s.state, update.msg, s.log)
 
 	if err == nil {
-		s.state = newState
-
 		update.resultCh <- nil
-
 	} else {
 		update.resultCh <- err
 	}
@@ -197,52 +275,25 @@ type sagaUpdate struct {
 
 //
 // logs the specified message durably to the SagaLog & updates internal state if its a valid state transition
+// returns an error if the update was invalid or there was an error writing to the durable sagaLog
 //
-func logMessage(state *SagaState, msg SagaMessage, log SagaLog) (*SagaState, error) {
+func logMessage(state *SagaState, msg SagaMessage, log SagaLog) (error) {
 
 	//verify that the applied message results in a valid state
-	newState, err := updateSagaState(state, msg)
+	err := validateSagaUpdate(state, msg)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	//try durably storing the message
 	err = log.LogMessage(msg)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return newState, nil
+	// actually update the in-memory state
+	updateSagaState(state, msg)
+	return nil
 }
 
-// Checks the error returned by updating saga state.
-// Returns true if the error is a FatalErr.
-// Returns false if the error is transient and a retry might succeed
-func FatalErr(err error) bool {
 
-	switch err.(type) {
-	// InvalidSagaState is an unrecoverable error. This indicates a fatal bug in the code
-	// which is asking for an impossible transition.
-	case InvalidSagaStateError:
-		return true
-
-	// InvalidSagaMessage is an unrecoverable error.  This indicates a fatal bug in the code
-	// which is applying invalid parameters to a saga.
-	case InvalidSagaMessageError:
-		return true
-
-	// InvalidRequestError is an unrecoverable error.  This indicates a fatal bug in the code
-	// where the SagaLog cannot durably store messages
-	case InvalidRequestError:
-		return true
-
-	// InternalLogError is a transient error experienced by the log.  It was not
-	// able to durably store the message but it is ok to retry.
-	case InternalLogError:
-		return false
-
-	// unknown error, default to retryable.
-	default:
-		return true
-	}
-}

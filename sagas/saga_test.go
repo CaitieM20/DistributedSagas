@@ -22,7 +22,7 @@ func TestEndSaga(t *testing.T) {
 		t.Error("Expected EndSaga to not return an error", err)
 	}
 
-	if !s.GetState().IsSagaCompleted() {
+	if !s.IsSagaCompleted() {
 		t.Error("Expected Saga to be completed")
 	}
 }
@@ -44,7 +44,7 @@ func TestEndSagaLogError(t *testing.T) {
 		t.Error("Expected EndSaga to not return an error when write to SagaLog Fails")
 	}
 
-	if s.GetState().IsSagaCompleted() {
+	if s.IsSagaCompleted() {
 		t.Error("Expected saga to not be completed")
 	}
 }
@@ -66,7 +66,7 @@ func TestAbortSaga(t *testing.T) {
 		t.Error("Expected AbortSaga to not return an error", err)
 	}
 
-	if !s.GetState().IsSagaAborted() {
+	if !s.IsSagaAborted() {
 		t.Error("expected Saga to be Aborted")
 	}
 }
@@ -88,7 +88,7 @@ func TestAbortSagaLogError(t *testing.T) {
 		t.Error("Expected AbortSaga to return an error when write to SagaLog Fails")
 	}
 
-	if s.GetState().IsSagaAborted() {
+	if s.IsSagaAborted() {
 		t.Error("Expected abort to not be applied on error")
 	}
 }
@@ -110,7 +110,7 @@ func TestStartTask(t *testing.T) {
 		t.Error("Expected StartTask to not return an error", err)
 	}
 
-	if !s.GetState().IsTaskStarted("task1") {
+	if !s.IsTaskStarted("task1") {
 		t.Error("Expected task1 to be started")
 	}
 }
@@ -132,7 +132,7 @@ func TestStartTaskLogError(t *testing.T) {
 		t.Error("Expected StartTask to not return an error when write to SagaLog Fails")
 	}
 
-	if s.GetState().IsTaskStarted("task1") {
+	if s.IsTaskStarted("task1") {
 		t.Error("Expected task1 to not be started")
 	}
 }
@@ -156,7 +156,7 @@ func TestEndTask(t *testing.T) {
 		t.Error("Expected EndTask to not return an error", err)
 	}
 
-	if !s.GetState().IsTaskCompleted("task1") {
+	if !s.IsTaskCompleted("task1") {
 		t.Error("expected task1 to be completed")
 	}
 }
@@ -180,7 +180,7 @@ func TestEndTaskLogError(t *testing.T) {
 		t.Error("Expected EndTask to not return an error when write to SagaLog Fails", err)
 	}
 
-	if s.GetState().IsTaskCompleted("task1") {
+	if s.IsTaskCompleted("task1") {
 		t.Error("Expected task1 to not be completed")
 	}
 }
@@ -206,7 +206,7 @@ func TestStartCompTask(t *testing.T) {
 		t.Error("Expected StartCompensatingTask to not return an error", err)
 	}
 
-	if !s.GetState().IsCompTaskStarted("task1") {
+	if !s.IsCompTaskStarted("task1") {
 		t.Error("Expected Comp Task to be started")
 	}
 }
@@ -232,7 +232,7 @@ func TestStartCompTaskLogError(t *testing.T) {
 		t.Error("Expected StartCompTask to not return an error when write to SagaLog Fails")
 	}
 
-	if s.GetState().IsCompTaskStarted("task1") {
+	if s.IsCompTaskStarted("task1") {
 		t.Error("Expected task1 to not be completed")
 	}
 }
@@ -260,7 +260,7 @@ func TestEndCompTask(t *testing.T) {
 		t.Error("Expected EndCompensatingTask to not return an error", err)
 	}
 
-	if !s.GetState().IsCompTaskCompleted("task1") {
+	if !s.IsCompTaskCompleted("task1") {
 		t.Error("Expected Comp task1 to be completed")
 	}
 }
@@ -288,7 +288,7 @@ func TestEndCompTaskLogError(t *testing.T) {
 		t.Error("Expected EndCompTask to not return an error when write to SagaLog Fails")
 	}
 
-	if s.GetState().IsCompTaskCompleted("task1") {
+	if s.IsCompTaskCompleted("task1") {
 		t.Error("Expected task1 to not be completed")
 	}
 }

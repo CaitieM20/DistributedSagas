@@ -1,9 +1,7 @@
 package sagas
 
 //
-// Saga Object which provides all Saga Functionality
-// Implementations of SagaLog should provide a factory method
-// which returns a saga based on its implementation.
+// SagaCoordinator organizes a set of Sagas.  
 //
 type SagaCoordinator struct {
 	log SagaLog
@@ -25,10 +23,10 @@ func (s SagaCoordinator) MakeSaga(sagaId string, job []byte) (*Saga, error) {
 }
 
 //
-// Should be called at Saga Creation time.
+// Should be called at SEC Startup Time.  
 // Returns a Slice of In Progress SagaIds
 //
-func (s SagaCoordinator) Startup() ([]string, error) {
+func (s SagaCoordinator) GetActiveSagas() ([]string, error) {
 
 	ids, err := s.log.GetActiveSagas()
 	if err != nil {
