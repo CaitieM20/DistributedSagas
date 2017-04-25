@@ -2,8 +2,8 @@ package inMemLog
 
 import (
 	"errors"
-	"github.com/caitiem20/DistributedSagas/sagas"
 	"fmt"
+	"github.com/caitiem20/DistributedSagas/sagas"
 	"sync"
 )
 
