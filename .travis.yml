@@ -17,4 +17,4 @@ test:
   - sh testCoverage.sh
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash) -t e8c7199e-c200-4dc4-af38-36e85163a61a
